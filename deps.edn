@@ -1,0 +1,6 @@
+{:paths ["src"]
+ :aliases
+ {:test {:extra-paths ["test"]
+         :extra-deps {lambdaisland/kaocha {:mvn/version "1.0.829"}}}
+  :lint {:extra-deps {clj-kondo/clj-kondo {:mvn/version "RELEASE"}}
+         :main-opts ["-m" "clj-kondo.main"]}}}
