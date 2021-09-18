@@ -2,10 +2,9 @@
   (:gen-class)
   (:require
     [clojure.java.io :as io]
-    [clojure.tools.cli :refer [parse-opts]])
+    [clojure.tools.cli :refer [parse-opts]]
+    [state :refer [init-state]])
   (:import (java.io ByteArrayInputStream InputStreamReader BufferedReader)))
-
-(defrecord RunningState [state-atom])
 
 (def +cli-options+
   [])
@@ -53,7 +52,7 @@
 
 (defn run-prompt
   []
-  (let [_state (RunningState. (atom {}))]
+  (let [_state (init-state)]
     (show-prompt)
     (loop [line (read-line)]
       (when (some? line)
@@ -63,7 +62,7 @@
 
 (defn exec-file
   [filename]
-  (let [_state (RunningState. (atom {}))]
+  (let [_state (init-state)]
     (with-open [reader (io/reader (io/file filename))]
       (process-stream reader))))
 
