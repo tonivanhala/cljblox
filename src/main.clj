@@ -10,6 +10,21 @@
 (def +cli-options+
   [])
 
+(defn print-banner
+  []
+  (let [print-multiline
+        (fn -print-multiline [& strings]
+          (->> strings
+            (clojure.string/join (System/lineSeparator))
+            (println)))]
+    (print-multiline
+      "BBBB  L     OOO  XX XX"
+      "B   B L    O   O  X X "
+      "BBBB  L    O   O   X  "
+      "B   B L    O   O  X X "
+      "BBBB  LLLL  OOO  XX XX"
+      "Blox interpreter - \"Bacon-flavored Lox\"")))
+
 (defn show-prompt
   ([]
    (show-prompt false))
@@ -57,6 +72,7 @@
   (let [parsed-args (parse-opts args +cli-options+)
         errors (:errors parsed-args)
         arguments (:arguments parsed-args)]
+    (print-banner)
     (when (not-empty errors)
       (doseq [error errors]
         (println error))
