@@ -2,6 +2,7 @@
   (:gen-class)
   (:require
     [clojure.java.io :as io]
+    [clojure.string :as str]
     [clojure.tools.cli :refer [parse-opts]]
     [state :refer [init-state]])
   (:import (java.io ByteArrayInputStream InputStreamReader BufferedReader)))
@@ -14,7 +15,7 @@
   (let [print-multiline
         (fn -print-multiline [& strings]
           (->> strings
-            (clojure.string/join (System/lineSeparator))
+            (str/join (System/lineSeparator))
             (println)))]
     (print-multiline
       "BBBB  L     OOO  XX XX"

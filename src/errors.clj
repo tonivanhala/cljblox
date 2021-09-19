@@ -1,23 +1,23 @@
 (ns errors
-  (:require [state :refer [RunningState]]))
+  (:import (clojure.lang IPersistentMap)))
 
-(defrecord Error
-  [line column message])
+(defrecord ScanError
+  [line column type message])
 
 (defn add-error
-  [^RunningState state error]
-  (update state :state #(update % conj error)))
+  [state ^IPersistentMap error]
+  (update state :errors #(conj % (map->ScanError error))))
 
 (defn has-errors
-  [^RunningState state]
+  [state]
   (->> state :errors count (< 0)))
 
 (defn report-error
-  [^Error error]
+  [error]
   (println
     (str "[" (:line error) "," (:column error) "]: " (:message error))))
 
 (defn report-errors
-  [^RunningState state]
+  [state]
   (doseq [error (:errors state)]
     (report-error error)))
