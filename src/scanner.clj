@@ -325,18 +325,17 @@
               nil)
 
             (not (digit? ch))
-            (do
-              (let [lexeme (->> @buffer
-                                (drop-last)
-                                (str/join ""))
-                    number (Integer/valueOf ^String lexeme)]
-                (swap! buffer #(str (last %)))
-                (set-scanner-state state ::FRESH)
-                (t/map->Token {:type ::t/INTEGER
-                               :lexeme lexeme
-                               :literal number
-                               :line @line
-                               :column @column})))
+            (let [lexeme (->> @buffer
+                              (drop-last)
+                              (str/join ""))
+                  number (Integer/valueOf ^String lexeme)]
+              (swap! buffer #(str (last %)))
+              (set-scanner-state state ::FRESH)
+              (t/map->Token {:type ::t/INTEGER
+                             :lexeme lexeme
+                             :literal number
+                             :line @line
+                             :column @column}))
             :else
             nil))
 
@@ -399,20 +398,18 @@
               (reset! buffer "")
               token)
             (t/->Token ::t/EOF nil nil @line @column))
-          (do
-            (if (not= ch 10)
-              (do (swap! column inc)
-                  (swap! buffer str (char ch))
-                  (or (buffer->token line column buffer state)
-                      (recur (.read reader))))
-              (do
-                (let [token (and (not-empty @buffer) (handle-token-break line column buffer state))]
-                  (swap! line inc)
-                  (reset! column 1)
-                  (reset! buffer "")
-                  (set-scanner-state state ::FRESH)
-                  (or token
-                    (recur (.read reader))))))))))))
+          (if (not= ch 10)
+            (do (swap! column inc)
+                (swap! buffer str (char ch))
+                (or (buffer->token line column buffer state)
+                    (recur (.read reader))))
+            (let [token (and (not-empty @buffer) (handle-token-break line column buffer state))]
+              (swap! line inc)
+              (reset! column 1)
+              (reset! buffer "")
+              (set-scanner-state state ::FRESH)
+              (or token
+                (recur (.read reader))))))))))
 
 (defn reader->stream-scanner
   ([^BufferedReader reader]
