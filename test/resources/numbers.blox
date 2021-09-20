@@ -2,9 +2,13 @@
 123.456
 .456
 123.
+077
+0xFF
 
 // expect: INTEGER 123 123
 // expect: DECIMAL 123.456 123.456
 // expect: DECIMAL .456 0.456
 // expect: DECIMAL 123. 123.0
+// expect: HEXADECIMAL 0xFF 255
+// expect: OCTAL 077 63
 // expect: EOF  null

@@ -68,6 +68,17 @@
   [ch]
   (or (alpha? ch) (digit? ch)))
 
+(defn octal?
+  [ch]
+  (<= (int \0) (int ch) (int \7)))
+
+(defn hexadecimal?
+  [ch]
+  (or
+    (digit? ch)
+    (<= (int \a) (int ch) (int \f))
+    (<= (int \A) (int ch) (int \F))))
+
 (defn handle-token-break
   [line column buffer state]
   (let [first-char (str (first @buffer))]
@@ -117,6 +128,25 @@
                        :literal number
                        :line @line
                        :column @column}))
+      ::OCTAL
+      (let [lexeme (->> @buffer
+                        (str/join ""))
+            number (Integer/valueOf ^String lexeme 8)]
+        (t/map->Token {:type ::t/OCTAL
+                       :lexeme lexeme
+                       :literal number
+                       :line @line
+                       :column @column}))
+      ::HEX
+      (let [lexeme (->> @buffer
+                        (str/join ""))
+            number-part (.substring lexeme 2)
+            number (Integer/valueOf ^String number-part 16)]
+        (t/map->Token {:type ::t/HEXADECIMAL
+                       :lexeme lexeme
+                       :literal number
+                       :line @line
+                       :column @column}))
       ::DECIMAL
       (let [^String lexeme (->> @buffer
                                 (str/join ""))
@@ -136,7 +166,16 @@
                        :lexeme lexeme
                        :line @line
                        :column (dec @column)}))
+
+      ::ZERO
+      (t/map->Token {:type ::t/INTEGER
+                     :lexeme first-char
+                     :literal 0
+                     :line @line
+                     :column @column})
+
       nil)))
+
 
 (defn buffer->token
   [line column buffer state]
@@ -197,6 +236,11 @@
             (= \space first-char)
             (do
               (set-scanner-state state ::WHITESPACE)
+              nil)
+
+            (= \0 first-char)
+            (do
+              (set-scanner-state state ::ZERO)
               nil)
 
             (digit? first-char)
@@ -382,7 +426,92 @@
               (t/map->Token {:type (get +reserved-words+ lexeme ::t/IDENTIFIER)
                              :lexeme lexeme
                              :line @line
-                             :column (dec @column)}))))))))
+                             :column (dec @column)}))))
+
+        ::ZERO
+        (let [ch (last @buffer)]
+          (cond
+            (digit? ch)
+            (do
+              (set-scanner-state state ::OCTAL)
+              nil)
+
+            (= \x ch)
+            (do
+              (set-scanner-state state ::HEX)
+              nil)
+
+            (= \. ch)
+            (do
+              (set-scanner-state state ::DECIMAL)
+              nil)
+
+            :else
+            (do
+              (set-scanner-state state ::FRESH)
+              (swap! buffer #(str/join "" (rest %)))
+              (t/map->Token {:type ::t/INTEGER
+                             :lexeme "0"
+                             :literal 0
+                             :line @line
+                             :column @column}))))
+
+        ::OCTAL
+        (let [ch (last @buffer)]
+          (cond
+            (octal? ch)
+            nil
+            (digit? ch)
+            (do
+              (swap! state e/add-error {:line @line
+                                        :column @column
+                                        :type ::e/INVALID-OCTAL-NUMBER})
+              (reset! buffer "")
+              (set-scanner-state state ::FRESH)
+              nil)
+            :else
+            (let [lexeme (->> @buffer
+                              (drop-last)
+                              (str/join ""))
+                  number-part (.substring lexeme 1)
+                  number (Integer/parseInt ^String number-part 8)]
+              (set-scanner-state state ::FRESH)
+              (swap! buffer #(str (last %)))
+              (t/map->Token {:type ::t/OCTAL
+                             :lexeme lexeme
+                             :literal number
+                             :line @line
+                             :column @column}))))
+
+        ::HEX
+        (let [ch (last @buffer)]
+          (cond
+            (hexadecimal? ch)
+            nil
+            (alpha-numeric? ch)
+            (do
+              (swap! state e/add-error {:type ::e/INVALID-HEXADECIMAL
+                                        :line @line
+                                        :column @column})
+              (reset! buffer "")
+              (set-scanner-state state ::FRESH))
+            :else
+            (let [lexeme (->> @buffer
+                              (drop-last)
+                              (str/join ""))
+                  number-part (.substring lexeme 2)
+                  number (Integer/parseInt ^String number-part 16)]
+              (set-scanner-state state ::FRESH)
+              (swap! buffer #(str (last %)))
+              (t/map->Token {:type ::t/HEXADECIMAL
+                             :lexeme lexeme
+                             :literal number
+                             :line @line
+                             :column @column}))))))))
+
+
+
+
 
 
 (defrecord StreamScanner

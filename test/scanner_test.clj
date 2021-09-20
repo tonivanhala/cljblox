@@ -10,6 +10,8 @@
    {:type ::t/DECIMAL :lexeme "123.456" :literal 123.456}
    {:type ::t/DECIMAL :lexeme ".456" :literal 0.456}
    {:type ::t/DECIMAL :lexeme "123." :literal 123.0}
+   {:type ::t/OCTAL :lexeme "077" :literal 63}
+   {:type ::t/HEXADECIMAL :lexeme "0xFF" :literal 255}
    {:type ::t/EOF}])
 
 (defn token-matches?
