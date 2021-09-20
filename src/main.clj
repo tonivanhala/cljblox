@@ -4,7 +4,7 @@
     [clojure.java.io :as io]
     [clojure.string :as str]
     [clojure.tools.cli :refer [parse-opts]]
-    [state :refer [init-state]])
+    [scanner :refer [reader->stream-scanner tokens]])
   (:import (java.io ByteArrayInputStream InputStreamReader BufferedReader)))
 
 (def +cli-options+
@@ -35,37 +35,32 @@
    (flush)))
 
 (defn process-stream
-  [^BufferedReader reader]
-  (loop [ch (.read reader)]
-    (when-not (= -1 ch)
-      (print (char ch))
-      (recur (.read reader)))))
+  [scanner]
+  (doseq [token (tokens scanner)]
+    (println token)))
 
-(defn process-line
+(defn line->reader
   [^String line]
   (-> line
       (.getBytes)
       (ByteArrayInputStream.)
       (InputStreamReader.)
-      (BufferedReader.)
-      (process-stream))
-  (println))
+      (BufferedReader.)))
 
 (defn run-prompt
   []
-  (let [_state (init-state)]
-    (show-prompt)
-    (loop [line (read-line)]
-      (when (some? line)
-        (process-line line)
-        (show-prompt)
-        (recur (read-line))))))
+  (show-prompt)
+  (loop [scanner (some-> (read-line) (line->reader) (reader->stream-scanner))]
+    (when (some? scanner)
+      (process-stream scanner)
+      (show-prompt)
+      (recur (some-> (read-line) (line->reader) (reader->stream-scanner scanner))))))
 
 (defn exec-file
   [filename]
-  (let [_state (init-state)]
-    (with-open [reader (io/reader (io/file filename))]
-      (process-stream reader))))
+  (with-open [reader (io/reader (io/file filename))]
+    (let [scanner (reader->stream-scanner reader)]
+      (process-stream scanner))))
 
 (defn -main
   [& args]

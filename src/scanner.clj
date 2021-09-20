@@ -415,13 +415,14 @@
                     (recur (.read reader))))))))))))
 
 (defn reader->stream-scanner
-  [^BufferedReader reader]
-  (map->StreamScanner
-    {:line (atom 1)
-     :column (atom 1)
-     :buffer (atom "")
-     :state (atom {:errors [] :scanner ::FRESH})
-     :reader reader}))
+  ([^BufferedReader reader]
+   (reader->stream-scanner reader {:line (atom 1)
+                                   :column (atom 1)
+                                   :buffer (atom "")
+                                   :state (atom {:errors [] :scanner ::FRESH})}))
+  ([^BufferedReader reader scanner-params]
+   (map->StreamScanner
+     (assoc scanner-params :reader reader))))
 
 (defn tokens
   [^StreamScanner scanner]
