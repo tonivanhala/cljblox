@@ -49,7 +49,7 @@
 
 (defn get-user-input
   []
-  (some-> (read-line) (str \n) (line->reader)))
+  (some-> (read-line) (str \newline) (line->reader)))
 
 (defn run-prompt
   []
