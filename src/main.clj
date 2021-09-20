@@ -47,14 +47,18 @@
       (InputStreamReader.)
       (BufferedReader.)))
 
+(defn get-user-input
+  []
+  (some-> (read-line) (str \n) (line->reader)))
+
 (defn run-prompt
   []
   (show-prompt)
-  (loop [scanner (some-> (read-line) (line->reader) (reader->stream-scanner))]
+  (loop [scanner (some-> (get-user-input) (reader->stream-scanner))]
     (when (some? scanner)
       (process-stream scanner)
       (show-prompt)
-      (recur (some-> (read-line) (line->reader) (reader->stream-scanner scanner))))))
+      (recur (some-> (get-user-input) (reader->stream-scanner scanner))))))
 
 (defn exec-file
   [filename]
