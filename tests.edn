@@ -1,5 +1,5 @@
 #kaocha/v1
 {:tests [{:id           :backend
           :source-paths ["src"]
-          :test-paths   ["test"]
+          :test-paths   ["test" "test/resources"]
           :ns-patterns  [".*"]}]}

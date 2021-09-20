@@ -1,0 +1,10 @@
+123
+123.456
+.456
+123.
+
+// expect: INTEGER 123 123
+// expect: DECIMAL 123.456 123.456
+// expect: DECIMAL .456 0.456
+// expect: DECIMAL 123. 123.0
+// expect: EOF  null
