@@ -14,6 +14,16 @@
    {:type ::t/HEXADECIMAL :lexeme "0xFF" :literal 255}
    {:type ::t/EOF}])
 
+(def +expected-identifiers+
+  ["andy"
+   "formless"
+   "fo"
+   "_"
+   "_123"
+   "_abc"
+   "ab123"
+   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"])
+
 (defn token-matches?
   [expected actual]
   (let [a (select-keys actual (keys expected))]
@@ -25,4 +35,14 @@
           scanner (reader->stream-scanner test-file)
           tokens-from-file (tokens scanner)]
       (doseq [[expected actual] (map #(list %1 %2) +expected-number-tokens+ tokens-from-file)]
+        (is (token-matches? expected actual))))))
+
+(deftest parse-identifiers
+  (testing "extracts identifiers"
+    (let [test-file (io/reader (io/file (io/resource "identifiers.blox")))
+          scanner (reader->stream-scanner test-file)
+          tokens-from-file (tokens scanner)]
+      (doseq [[expected actual]
+              (map
+                #(list {:lexeme %1 :type ::t/IDENTIFIER} %2) +expected-identifiers+ tokens-from-file)]
         (is (token-matches? expected actual))))))
