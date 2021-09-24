@@ -42,6 +42,27 @@
    ::t/WHILE
    ::t/EOF])
 
+(def +expected-punctuators+
+  [::t/LEFT-PAREN
+   ::t/RIGHT-PAREN
+   ::t/LEFT-BRACE
+   ::t/RIGHT-BRACE
+   ::t/SEMICOLON
+   ::t/COMMA
+   ::t/PLUS
+   ::t/MINUS
+   ::t/STAR
+   ::t/BANG-EQUAL
+   ::t/EQUAL-EQUAL
+   ::t/LESS-EQUAL
+   ::t/GREATER-EQUAL
+   ::t/BANG-EQUAL
+   ::t/LESS
+   ::t/GREATER
+   ::t/SLASH
+   ::t/DOT
+   ::t/EOF])
+
 (defn token-matches?
   [expected actual]
   (let [a (select-keys actual (keys expected))]
@@ -73,4 +94,14 @@
       (doseq [[expected actual]
               (map
                 #(list {:type %1} %2) +expected-keywords+ tokens-from-file)]
+        (is (token-matches? expected actual))))))
+
+(deftest parse-punctuators
+  (testing "extracts punctuators"
+    (let [test-file (io/reader (io/file (io/resource "punctuators.blox")))
+          scanner (reader->stream-scanner test-file)
+          tokens-from-file (tokens scanner)]
+      (doseq [[expected actual]
+              (map
+                #(list {:type %1} %2) +expected-punctuators+ tokens-from-file)]
         (is (token-matches? expected actual))))))
