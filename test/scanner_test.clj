@@ -24,6 +24,24 @@
    "ab123"
    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"])
 
+(def +expected-keywords+
+  [::t/AND
+   ::t/CLASS
+   ::t/ELSE
+   ::t/FALSE
+   ::t/FOR
+   ::t/FUN
+   ::t/IF
+   ::t/NIL
+   ::t/OR
+   ::t/RETURN
+   ::t/SUPER
+   ::t/THIS
+   ::t/TRUE
+   ::t/VAR
+   ::t/WHILE
+   ::t/EOF])
+
 (defn token-matches?
   [expected actual]
   (let [a (select-keys actual (keys expected))]
@@ -45,4 +63,14 @@
       (doseq [[expected actual]
               (map
                 #(list {:lexeme %1 :type ::t/IDENTIFIER} %2) +expected-identifiers+ tokens-from-file)]
+        (is (token-matches? expected actual))))))
+
+(deftest parse-keywords
+  (testing "extracts keywords"
+    (let [test-file (io/reader (io/file (io/resource "keywords.blox")))
+          scanner (reader->stream-scanner test-file)
+          tokens-from-file (tokens scanner)]
+      (doseq [[expected actual]
+              (map
+                #(list {:type %1} %2) +expected-keywords+ tokens-from-file)]
         (is (token-matches? expected actual))))))
