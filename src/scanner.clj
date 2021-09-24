@@ -261,10 +261,12 @@
         ::STRING-LITERAL
         (when
           (= \" (last @buffer))
-          (let [token (t/map->Token {:type ::t/STRING-LITERAL
+          (let [length (count @buffer)
+                token (t/map->Token {:type ::t/STRING-LITERAL
                                      :lexeme @buffer
+                                     :literal (.substring @buffer 1 (- length 1))
                                      :line @line
-                                     :column (- @column (count @buffer))})]
+                                     :column (- @column length)})]
             (reset! buffer "")
             (set-scanner-state state ::FRESH)
             token))
