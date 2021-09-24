@@ -26,7 +26,7 @@
   {"and" ::t/AND
    "class" ::t/CLASS
    "else" ::t/ELSE
-   "false" ::t/false
+   "false" ::t/FALSE
    "for" ::t/FOR
    "fun" ::t/FUN
    "if" ::t/IF
