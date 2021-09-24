@@ -63,6 +63,11 @@
    ::t/DOT
    ::t/EOF])
 
+(def +expected-string-tokens+
+  [{:type ::t/STRING-LITERAL :lexeme "\"\"" :literal ""}
+   {:type ::t/STRING-LITERAL :lexeme "\"string\"" :literal "string"}
+   {:type ::t/EOF}])
+
 (defn token-matches?
   [expected actual]
   (let [a (select-keys actual (keys expected))]
@@ -104,4 +109,12 @@
       (doseq [[expected actual]
               (map
                 #(list {:type %1} %2) +expected-punctuators+ tokens-from-file)]
+        (is (token-matches? expected actual))))))
+
+(deftest parse-strings
+  (testing "extracts string literals from a file"
+    (let [test-file (io/reader (io/file (io/resource "strings.blox")))
+          scanner (reader->stream-scanner test-file)
+          tokens-from-file (tokens scanner)]
+      (doseq [[expected actual] (map #(list %1 %2) +expected-string-tokens+ tokens-from-file)]
         (is (token-matches? expected actual))))))
