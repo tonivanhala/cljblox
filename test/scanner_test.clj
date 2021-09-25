@@ -118,3 +118,14 @@
           tokens-from-file (tokens scanner)]
       (doseq [[expected actual] (map #(list %1 %2) +expected-string-tokens+ tokens-from-file)]
         (is (token-matches? expected actual))))))
+
+(deftest ignore-whitespace
+  (testing "ignores whitespace"
+    (let [test-file (io/reader (io/file (io/resource "whitespace.blox")))
+          scanner (reader->stream-scanner test-file)
+          tokens-from-file (tokens scanner)
+          identifiers ["space" "tabs" "newlines"]]
+      (doseq [[expected actual]
+              (map
+                #(list {:lexeme %1 :type ::t/IDENTIFIER} %2) identifiers tokens-from-file)]
+        (is (token-matches? expected actual))))))
