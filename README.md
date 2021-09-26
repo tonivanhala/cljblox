@@ -20,3 +20,9 @@ Run tests
 Lint the code
 
     make lint
+
+# License
+
+I'm using the [MIT license](./LICENSE), which is permissive for modifications and commercial use. This matches [the repository for the book](https://github.com/munificent/craftinginterpreters), which adopts MIT license for source files.
+
+I'm using some of these source files for my implementation. At the moment, I've copied some `.lox` source files for resources in Blox unit tests.
