@@ -1,0 +1,19 @@
+(5 - (3 - 1)) + -1
+
+// {:type :binary :operator :+
+//  :left {
+//   :type :group
+//   :child {
+//    :type :binary :operator :-
+//    :left {:type :decimal :value 5.0}
+//    :right {
+//     :type :group
+//     :child {
+//      :type :binary :operator :-
+//      :left {:type :decimal :value 3.0}
+//      :right {:type :decimal :value 1.0}}}}}
+//  :right {
+//   :type :group
+//   :child {
+//    :type :unary :operator :-
+//    :child {:type :decimal :value 1.0}}}}
