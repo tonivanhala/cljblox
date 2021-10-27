@@ -27,7 +27,7 @@
 
 (deftest parse-numbers
   (testing "extracts number tokens from a file"
-    (let [test-file (io/reader (io/file (io/resource "numbers.blox")))
+    (let [test-file (io/reader (io/file (io/resource "equality.blox")))
           scanner (reader->stream-scanner test-file)
           tokens-from-file (tokens scanner)
           syntax-tree (p/parse tokens-from-file)]
