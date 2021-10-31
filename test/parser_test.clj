@@ -6,24 +6,22 @@
     [clojure.test :refer [deftest testing is]]))
 
 (def +equality-expected-tree+
-  {:type ::p/BINARY :operator :+
+  {:type ::p/BINARY :operator :tokens/PLUS
    :left
    {:type ::p/GROUP
     :child
     {:type ::p/BINARY
-     :operator :-
-     :left {:type ::p/DECIMAL :value 5.0}
+     :operator :tokens/MINUS
+     :left {:type ::p/INTEGER :value 5}
      :right
      {:type ::p/GROUP
       :child
-      {:type ::p/BINARY :operator :-
+      {:type ::p/BINARY :operator :tokens/MINUS
        :left {:type ::p/DECIMAL :value 3.0}
-       :right {:type ::p/DECIMAL :value 1.0}}}}}
+       :right {:type ::p/INTEGER :value 1}}}}}
    :right
-   {:type ::p/GROUP
-    :child
-    {:type ::p/UNARY :operator :-
-     :child {:type ::p/DECIMAL :value 1.0}}}})
+   {:type ::p/UNARY :operator :tokens/MINUS
+    :child {:type ::p/INTEGER :value 1}}})
 
 (deftest parse-numbers
   (testing "extracts number tokens from a file"
