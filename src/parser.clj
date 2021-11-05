@@ -14,15 +14,15 @@
     (or (case next-type
           ::t/FALSE [-prev-tokens
                      -token-stream
-                     {:type ::p/LITERAL
+                     {:type ::p/BOOLEAN
                       :value false}]
           ::t/TRUE [-prev-tokens
                     -token-stream
-                    {:type ::p/LITERAL
+                    {:type ::p/BOOLEAN
                      :value true}]
           ::t/NIL [-prev-tokens
                    -token-stream
-                   {:type ::p/LITERAL
+                   {:type ::p/BOOLEAN
                     :value nil}]
           false)
         (when (= ::t/DECIMAL next-type)
