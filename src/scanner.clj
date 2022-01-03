@@ -40,14 +40,6 @@
    "var" ::t/VAR
    "while" ::t/WHILE})
 
-(defn get-scanner-state
-  [state]
-  (:scanner @state))
-
-(defn set-scanner-state
-  [state scanner-state]
-  (swap! state #(assoc % :scanner scanner-state)))
-
 (defn whitespace?
   [ch]
   (or (= \space ch)
@@ -82,7 +74,7 @@
 (defn handle-token-break
   [line column buffer state]
   (let [first-char (str (first @buffer))]
-    (case (get-scanner-state state)
+    (case @state
       ::STRING-LITERAL
       (do
         (swap! state e/add-error {:line @line
@@ -181,7 +173,7 @@
   [line column buffer state]
   (when (not-empty @buffer)
     (let [single-char-token (buffer->single-char-token buffer)]
-      (case (get-scanner-state state)
+      (case @state
         ::FRESH
         (let [first-char (first @buffer)]
           (cond
@@ -195,67 +187,67 @@
 
             (= \" first-char)
             (do
-              (set-scanner-state state ::STRING-LITERAL)
+              (reset! state ::STRING-LITERAL)
               nil)
 
             (= \= first-char)
             (do
-              (set-scanner-state state ::EQUAL)
+              (reset! state ::EQUAL)
               nil)
 
             (= \! first-char)
             (do
-              (set-scanner-state state ::BANG)
+              (reset! state ::BANG)
               nil)
 
             (= \< first-char)
             (do
-              (set-scanner-state state ::LESS)
+              (reset! state ::LESS)
               nil)
 
             (= \> first-char)
             (do
-              (set-scanner-state state ::GREATER)
+              (reset! state ::GREATER)
               nil)
 
             (= \/ first-char)
             (do
-              (set-scanner-state state ::SLASH)
+              (reset! state ::SLASH)
               nil)
 
             (= \tab first-char)
             (do
-              (set-scanner-state state ::WHITESPACE)
+              (reset! state ::WHITESPACE)
               nil)
 
             (= \return first-char)
             (do
-              (set-scanner-state state ::WHITESPACE)
+              (reset! state ::WHITESPACE)
               nil)
 
             (= \space first-char)
             (do
-              (set-scanner-state state ::WHITESPACE)
+              (reset! state ::WHITESPACE)
               nil)
 
             (= \0 first-char)
             (do
-              (set-scanner-state state ::ZERO)
+              (reset! state ::ZERO)
               nil)
 
             (digit? first-char)
             (do
-              (set-scanner-state state ::NUMBER)
+              (reset! state ::NUMBER)
               nil)
 
             (= \. first-char)
             (do
-              (set-scanner-state state ::DOT)
+              (reset! state ::DOT)
               nil)
 
             (alpha? first-char)
             (do
-              (set-scanner-state state ::IDENTIFIER)
+              (reset! state ::IDENTIFIER)
               nil)))
 
         ::STRING-LITERAL
@@ -268,7 +260,7 @@
                                      :line @line
                                      :column (- @column length)})]
             (reset! buffer "")
-            (set-scanner-state state ::FRESH)
+            (reset! state ::FRESH)
             token))
 
         ::EQUAL
@@ -278,14 +270,14 @@
                                      :line @line
                                      :column (- @column (count @buffer))})]
             (reset! buffer "")
-            (set-scanner-state state ::FRESH)
+            (reset! state ::FRESH)
             token)
           (let [token (t/map->Token {:type ::t/EQUAL
                                      :lexeme (str (first @buffer))
                                      :line @line
                                      :column (- @column (count @buffer))})]
             (swap! buffer #(str/join "" (rest %)))
-            (set-scanner-state state ::FRESH)
+            (reset! state ::FRESH)
             token))
 
         ::BANG
@@ -295,14 +287,14 @@
                                      :line @line
                                      :column (- @column (count @buffer))})]
             (reset! buffer "")
-            (set-scanner-state state ::FRESH)
+            (reset! state ::FRESH)
             token)
           (let [token (t/map->Token {:type ::t/BANG
                                      :lexeme (str (first @buffer))
                                      :line @line
                                      :column (- @column (count @buffer))})]
             (swap! buffer #(str/join "" (rest %)))
-            (set-scanner-state state ::FRESH)
+            (reset! state ::FRESH)
             token))
 
         ::LESS
@@ -312,14 +304,14 @@
                                      :line @line
                                      :column (- @column (count @buffer))})]
             (reset! buffer "")
-            (set-scanner-state state ::FRESH)
+            (reset! state ::FRESH)
             token)
           (let [token (t/map->Token {:type ::t/LESS
                                      :lexeme (str (first @buffer))
                                      :line @line
                                      :column (- @column (count @buffer))})]
             (swap! buffer #(str/join "" (rest %)))
-            (set-scanner-state state ::FRESH)
+            (reset! state ::FRESH)
             token))
 
         ::GREATER
@@ -329,27 +321,27 @@
                                      :line @line
                                      :column (- @column (count @buffer))})]
             (reset! buffer "")
-            (set-scanner-state state ::FRESH)
+            (reset! state ::FRESH)
             token)
           (let [token (t/map->Token {:type ::t/GREATER
                                      :lexeme (str (first @buffer))
                                      :line @line
                                      :column (- @column (count @buffer))})]
             (swap! buffer #(str/join "" (rest %)))
-            (set-scanner-state state ::FRESH)
+            (reset! state ::FRESH)
             token))
 
         ::SLASH
         (if (= "//" @buffer)
           (do
-            (set-scanner-state state ::COMMENT)
+            (reset! state ::COMMENT)
             nil)
           (let [token (t/map->Token {:type ::t/SLASH
                                      :lexeme (str (first @buffer))
                                      :line @line
                                      :column (- @column (count @buffer))})]
             (swap! buffer #(str/join "" (rest %)))
-            (set-scanner-state state ::FRESH)
+            (reset! state ::FRESH)
             token))
 
         ::COMMENT
@@ -359,7 +351,7 @@
         (let [ch (last @buffer)]
           (when (not (whitespace? ch))
             (reset! buffer (str ch))
-            (set-scanner-state state ::FRESH)
+            (reset! state ::FRESH)
             (buffer->token line column buffer state)))
 
         ::NUMBER
@@ -367,7 +359,7 @@
           (cond
             (= \. ch)
             (do
-              (set-scanner-state state ::DECIMAL)
+              (reset! state ::DECIMAL)
               nil)
 
             (not (digit? ch))
@@ -376,7 +368,7 @@
                               (str/join ""))
                   number (Integer/valueOf ^String lexeme)]
               (swap! buffer #(str (last %)))
-              (set-scanner-state state ::FRESH)
+              (reset! state ::FRESH)
               (t/map->Token {:type ::t/INTEGER
                              :lexeme lexeme
                              :literal number
@@ -396,7 +388,7 @@
                                             (= \. (first lexeme))
                                             (str "0")))]
               (swap! buffer #(str (last %)))
-              (set-scanner-state state ::FRESH)
+              (reset! state ::FRESH)
               (t/map->Token {:type ::t/DECIMAL
                              :lexeme lexeme
                              :literal number
@@ -407,14 +399,14 @@
         (let [ch (last @buffer)]
           (if (digit? ch)
             (do
-              (set-scanner-state state ::DECIMAL)
+              (reset! state ::DECIMAL)
               nil)
             (let [token (t/map->Token {:type ::t/DOT
                                        :lexeme (str (first @buffer))
                                        :line @line
                                        :column (dec @column)})]
               (swap! buffer #(str/join "" (rest %)))
-              (set-scanner-state state ::FRESH)
+              (reset! state ::FRESH)
               token)))
 
         ::IDENTIFIER
@@ -424,7 +416,7 @@
                               (drop-last)
                               (str/join ""))]
               (swap! buffer #(str (last %)))
-              (set-scanner-state state ::FRESH)
+              (reset! state ::FRESH)
               (t/map->Token {:type (get +reserved-words+ lexeme ::t/IDENTIFIER)
                              :lexeme lexeme
                              :line @line
@@ -435,22 +427,22 @@
           (cond
             (digit? ch)
             (do
-              (set-scanner-state state ::OCTAL)
+              (reset! state ::OCTAL)
               nil)
 
             (= \x ch)
             (do
-              (set-scanner-state state ::HEX)
+              (reset! state ::HEX)
               nil)
 
             (= \. ch)
             (do
-              (set-scanner-state state ::DECIMAL)
+              (reset! state ::DECIMAL)
               nil)
 
             :else
             (do
-              (set-scanner-state state ::FRESH)
+              (reset! state ::FRESH)
               (swap! buffer #(str/join "" (rest %)))
               (t/map->Token {:type ::t/INTEGER
                              :lexeme "0"
@@ -469,7 +461,7 @@
                                         :column @column
                                         :type ::e/INVALID-OCTAL-NUMBER})
               (reset! buffer "")
-              (set-scanner-state state ::FRESH)
+              (reset! state ::FRESH)
               nil)
             :else
             (let [lexeme (->> @buffer
@@ -477,7 +469,7 @@
                               (str/join ""))
                   number-part (.substring lexeme 1)
                   number (Integer/parseInt ^String number-part 8)]
-              (set-scanner-state state ::FRESH)
+              (reset! state ::FRESH)
               (swap! buffer #(str (last %)))
               (t/map->Token {:type ::t/OCTAL
                              :lexeme lexeme
@@ -496,14 +488,14 @@
                                         :line @line
                                         :column @column})
               (reset! buffer "")
-              (set-scanner-state state ::FRESH))
+              (reset! state ::FRESH))
             :else
             (let [lexeme (->> @buffer
                               (drop-last)
                               (str/join ""))
                   number-part (.substring lexeme 2)
                   number (Integer/parseInt ^String number-part 16)]
-              (set-scanner-state state ::FRESH)
+              (reset! state ::FRESH)
               (swap! buffer #(str (last %)))
               (t/map->Token {:type ::t/HEXADECIMAL
                              :lexeme lexeme
@@ -538,7 +530,7 @@
               (swap! line inc)
               (reset! column 1)
               (reset! buffer "")
-              (set-scanner-state state ::FRESH)
+              (reset! state ::FRESH)
               (or token
                 (recur (.read reader))))))))))
 
@@ -547,7 +539,7 @@
    (reader->stream-scanner reader {:line (atom 1)
                                    :column (atom 1)
                                    :buffer (atom "")
-                                   :state (atom {:errors [] :scanner ::FRESH})}))
+                                   :state (atom ::FRESH)}))
   ([^BufferedReader reader scanner-params]
    (map->StreamScanner
      (assoc scanner-params :reader reader))))
