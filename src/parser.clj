@@ -73,100 +73,43 @@
           :child --expr}])
       (parse-primary prev-tokens token-stream))))
 
-(defn parse-factor
-  [prev-tokens token-stream]
-  (let [[-prev -stream -expr]
-        (parse-unary prev-tokens token-stream)]
-    (loop [prev -prev
-           stream -stream
-           expr -expr]
-      (let [next-token (first stream)
-            next-type (:type next-token)]
-        (if-let [op (get #{::t/SLASH ::t/STAR} next-type)]
-          (let [[--prev --stream --expr]
-                (parse-unary
-                  (conj prev next-token)
-                  (rest stream))]
-            (recur --prev --stream {:type ::p/BINARY
-                                    :operator op
-                                    :left expr
-                                    :right --expr}))
-          [prev stream expr])))))
+(defn ->parse-binary-expressions
+  [parse-fn & -operators]
+  (let [operators (into #{} -operators)]
+    (fn -parse-expressions
+      [prev-tokens token-stream]
+      (let [[-prev -stream -expr] (parse-fn prev-tokens token-stream)]
+        (loop [prev -prev
+               stream -stream
+               expr -expr]
+          (let [next-token (first stream)
+                next-type (:type next-token)]
+            (if-let [op (get operators next-type)]
+              (let [[--prev --stream --expr]
+                    (parse-fn (conj prev next-token) (rest stream))]
+                (recur --prev --stream {:type ::p/BINARY
+                                        :operator op
+                                        :left expr
+                                        :right --expr}))
+              [prev stream expr])))))))
 
-(defn parse-term
-  [prev-tokens token-stream]
-  (let [[-prev -stream -expr]
-        (parse-factor prev-tokens token-stream)]
-    (loop [prev -prev
-           stream -stream
-           expr -expr]
-      (let [next-token (first stream)
-            next-type (:type next-token)]
-        (if-let [op (get #{::t/MINUS ::t/PLUS} next-type)]
-          (let [[--prev --stream --expr]
-                (parse-factor
-                  (conj prev next-token)
-                  (rest stream))]
-            (recur --prev --stream {:type ::p/BINARY
-                                    :operator op
-                                    :left expr
-                                    :right --expr}))
-          [prev stream expr])))))
+(def parse-factor (->parse-binary-expressions parse-unary ::t/SLASH ::t/STAR))
 
+(def parse-term (->parse-binary-expressions parse-factor ::t/MINUS ::t/PLUS))
 
-(defn parse-comparison
-  [prev-tokens token-stream]
-  (let [[-prev -stream -expr]
-        (parse-term prev-tokens token-stream)]
-    (loop [prev -prev
-           stream -stream
-           expr -expr]
-      (let [next-token (first stream)
-            next-type (:type next-token)]
-        (if-let [op
-                 (get
-                   #{::t/GREATER
-                     ::t/GREATER-EQUAL
-                     ::t/LESS
-                     ::t/LESS-EQUAL}
-                   next-type)]
-          (let [[--prev
-                 --stream
-                 --expr]
-                (parse-term
-                  (conj prev next-token)
-                  (rest stream))]
-            (recur
-              --prev
-              --stream
-              {:type ::p/BINARY
-               :operator op
-               :left expr
-               :right --expr}))
-          [prev stream expr])))))
+(def parse-comparison
+  (->parse-binary-expressions
+    parse-term
+    ::t/GREATER
+    ::t/GREATER-EQUAL
+    ::t/LESS
+    ::t/LESS-EQUAL))
 
-
-(defn parse-equality
-  [prev-tokens token-stream]
-  (let [[-prev -stream -expr]
-        (parse-comparison prev-tokens token-stream)]
-    (loop [prev -prev
-           stream -stream
-           expr -expr]
-      (let [next-token (first stream)
-            next-type (:type next-token)]
-        (if (or (= ::t/BANG-EQUAL next-type) (= ::t/EQUAL-EQUAL next-type))
-          (let [[--prev --stream --expr]
-                (parse-comparison
-                  (conj prev next-token)
-                  (rest stream))]
-            (recur
-              --prev
-              --stream
-              {:type ::p/BINARY :operator next-type
-               :left expr
-               :right --expr}))
-          [prev stream expr])))))
+(def parse-equality
+  (->parse-binary-expressions
+    parse-comparison
+    ::t/BANG-EQUAL
+    ::t/EQUAL-EQUAL))
 
 (defn parse-expression
   [prev-tokens token-stream]
