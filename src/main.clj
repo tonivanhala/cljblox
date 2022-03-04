@@ -60,6 +60,15 @@
       +initial-prompt-state+)
     prompt-state))
 
+(defn safe-process-line
+  [prompt-state]
+  (try
+    (process-line prompt-state)
+    (catch ExceptionInfo e
+      (println (ex-message e))
+      (println (ex-data e))
+      +initial-prompt-state+)))
+
 (defn closing-paren?
   [{prev :type} {this :type}]
   (or
@@ -119,7 +128,7 @@
     (when (some? scanner)
       (let [-prompt-state (safe-process-stream scanner prompt-state)]
         (-> -prompt-state
-            (process-line)
+            (safe-process-line)
             (show-prompt)
             (recur
               (some-> (get-user-input) (reader->stream-scanner scanner))))))))
