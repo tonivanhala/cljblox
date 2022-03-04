@@ -17,6 +17,10 @@ Run tests
 
     make test
 
+Run interactive REPL
+
+    make repl
+
 Lint the code
 
     make lint
